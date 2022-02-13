@@ -1,5 +1,17 @@
 clarkwinkelmann-mass-actions:
     forum:
+        select:
+            all: Select all
+            none: Unselect all
+        actions:
+            markAsRead: Mark as read
+            hide: Delete
+            restore: Restore
+            lock: Lock
+            unlock: Unlock
+            tags: Tags
+            tags-edit: Edit tags
+            tags-add: Add <em>{tag}</em>
 
     admin:
         permissions:

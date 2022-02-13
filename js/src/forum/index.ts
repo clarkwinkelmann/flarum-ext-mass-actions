@@ -1,16 +1,16 @@
-import {extend, override} from 'flarum/common/extend';
+import {extend} from 'flarum/common/extend';
 import app from 'flarum/forum/app';
 import IndexPage from 'flarum/forum/components/IndexPage';
 import DiscussionListItem from 'flarum/forum/components/DiscussionListItem';
 import Button from 'flarum/common/components/Button';
-import SplitDropdown from 'flarum/common/components/SplitDropdown';
+import Dropdown from 'flarum/common/components/Dropdown';
 import ItemList from 'flarum/common/utils/ItemList';
-import Tooltip from 'flarum/common/components/Tooltip';
+import DiscussionControls from 'flarum/forum/utils/DiscussionControls';
 import icon from 'flarum/common/helpers/icon';
 import listItems from 'flarum/common/helpers/listItems';
 import Checkbox from './components/Checkbox';
 import SelectState from './utils/SelectState';
-import Discussion from 'flarum/common/models/Discussion';
+import proxyModels from './utils/proxyModels';
 
 app.initializers.add('clarkwinkelmann-mass-actions', () => {
     function selectAllDiscussions() {
@@ -39,13 +39,13 @@ app.initializers.add('clarkwinkelmann-mass-actions', () => {
             onclick() {
                 selectAllDiscussions();
             },
-        }, 'Select all'));
+        }, app.translator.trans('clarkwinkelmann-mass-actions.forum.select.all')));
 
         controls.add('clear', Button.component({
             onclick() {
                 app.current.get('mass-select')!.clear();
             },
-        }, 'Unselect all'));
+        }, app.translator.trans('clarkwinkelmann-mass-actions.forum.select.none')));
 
         // We don't use Flarum's SplitDropdown because the children of the first button aren't redrawing properly
         items.add('mass-select', m('.ButtonGroup.Dropdown.Dropdown--split.dropdown', {}, [
@@ -64,6 +64,132 @@ app.initializers.add('clarkwinkelmann-mass-actions', () => {
             }, icon('fas fa-caret-down', {className: 'Button-caret'})),
             m('ul.Dropdown-menu.dropdown-menu', listItems(controls.toArray())),
         ]), 100);
+    });
+
+    extend(IndexPage.prototype, 'actionItems', function (items) {
+        const select = app.current.get('mass-select');
+        if (!select || select.count() === 0) {
+            return;
+        }
+
+        // Remove global actions
+        items.remove('refresh');
+        items.remove('markAllAsRead');
+
+        items.add('mass-markAsRead', Button.component({
+            title: app.translator.trans('clarkwinkelmann-mass-actions.forum.actions.markAsRead'),
+            icon: 'fas fa-check',
+            className: 'Button Button--icon',
+            onclick() {
+                select.forEachPromise(discussion => {
+                    // Same code as in DiscussionListItem
+                    if (discussion.isUnread()) {
+                        return discussion.save({lastReadPostNumber: discussion.lastPostNumber()});
+                    }
+
+                    return Promise.resolve();
+                }).then(() => {
+                    m.redraw();
+                });
+            },
+        }));
+
+        if (app.forum.attribute('canHideDiscussionsSometime')) {
+            const anyHidden = select.some(discussion => {
+                return discussion.isHidden();
+            });
+
+            items.add('mass-hide', Button.component({
+                title: anyHidden ? app.translator.trans('clarkwinkelmann-mass-actions.forum.actions.restore') : app.translator.trans('clarkwinkelmann-mass-actions.forum.actions.hide'),
+                icon: anyHidden ? 'fas fa-reply' : 'fas fa-trash-alt',
+                className: 'Button Button--icon',
+                onclick() {
+                    select.forEachPromise(discussion => {
+                        if (!discussion.canHide()) {
+                            return Promise.resolve();
+                        }
+
+                        if (anyHidden) {
+                            return DiscussionControls.restoreAction.call(discussion);
+                        } else {
+                            return DiscussionControls.hideAction.call(discussion);
+                        }
+                    }).then(() => {
+                        m.redraw();
+                    });
+                },
+                disabled: !select.some(discussion => {
+                    return discussion.canHide();
+                }),
+            }));
+        }
+
+        if (app.forum.attribute('canLockDiscussionsSometime')) {
+            const anyLocked = select.some(discussion => {
+                return discussion.attribute('isLocked');
+            });
+
+            items.add('mass-lock', Button.component({
+                title: anyLocked ? app.translator.trans('clarkwinkelmann-mass-actions.forum.actions.unlock') : app.translator.trans('clarkwinkelmann-mass-actions.forum.actions.lock'),
+                icon: anyLocked ? 'fas fa-unlock' : 'fas fa-lock',
+                className: 'Button Button--icon',
+                onclick() {
+                    select.forEachPromise(discussion => {
+                        if (!discussion.attribute('canLock')) {
+                            return Promise.resolve();
+                        }
+
+                        // Re-implement DiscussionControls.lockAction to force lock or unlock instead of toggling
+                        return discussion.save({isLocked: !anyLocked});
+                    }).then(() => {
+                        m.redraw();
+                    });
+                },
+                disabled: !select.some(discussion => {
+                    return discussion.attribute('canLock');
+                }),
+            }));
+        }
+
+        items.add('mass-tags', Dropdown.component({
+            buttonClassName: 'Button',
+            label: app.translator.trans('clarkwinkelmann-mass-actions.forum.actions.tags'),
+            disabled: !select.some(discussion => {
+                return discussion.attribute('canTag');
+            }),
+        }, [
+            Button.component({
+                onclick() {
+                    app.modal.show(flarum.core.compat['tags/forum/components/TagDiscussionModal'], {
+                        discussion: proxyModels(select.all()),
+                    });
+                },
+            }, app.translator.trans('clarkwinkelmann-mass-actions.forum.actions.tags-edit')),
+            app.store.all('tags').map(tag => Button.component({
+                onclick() {
+                    select.forEachPromise(discussion => {
+                        if (!discussion.attribute('canTag')) {
+                            return Promise.resolve();
+                        }
+
+                        const tags = discussion.tags() || [];
+
+                        // If discussion already has this tag, skip
+                        if (tags.some(thisTag => thisTag.id() === tag.id())) {
+                            return Promise.resolve();
+                        }
+
+                        tags.push(tag);
+
+                        return discussion.save({relationships: {tags}})
+                    }).then(() => {
+                        m.redraw();
+                    });
+                },
+            }, app.translator.trans('clarkwinkelmann-mass-actions.forum.actions.tags-add', {
+                tag: tag.name(),
+            }))),
+        ]));
     });
 
     extend(DiscussionListItem.prototype, 'view', function (vdom) {
@@ -97,6 +223,6 @@ app.initializers.add('clarkwinkelmann-mass-actions', () => {
     });
 
     extend(IndexPage.prototype, 'oninit', function () {
-        app.current.set('mass-select', new SelectState());
+        app.current.set('mass-select', new SelectState('discussions'));
     });
 });
