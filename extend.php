@@ -40,5 +40,10 @@ return [
         })
         ->attribute('canLockDiscussionsSometime', function (ForumSerializer $serializer) {
             return hasGlobalOrScopedPermission($serializer->getActor(), 'discussion.lock');
+        })
+        ->attribute('canTagDiscussionsSometime', function (ForumSerializer $serializer) {
+            // The tag edit policy is split between moderator permission and self-edit permission
+            // We will only enable the mass control if self tag edit was set to "indefinitely"
+            return hasGlobalOrScopedPermission($serializer->getActor(), 'discussion.tag') || resolve('flarum.settings')->get('allow_tag_change') === '-1';
         }),
 ];
