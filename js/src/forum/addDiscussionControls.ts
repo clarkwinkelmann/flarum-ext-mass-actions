@@ -19,6 +19,10 @@ function selectAllDiscussions() {
 
 export default function () {
     extend(IndexPage.prototype, 'viewItems', function (items) {
+        if (!app.forum.attribute('massControls')) {
+            return;
+        }
+
         const controls = new ItemList();
 
         let iconName = 'far fa-square';
@@ -65,7 +69,7 @@ export default function () {
 
     extend(DiscussionListItem.prototype, 'view', function (vdom) {
         // Only add the checkboxes on the index page, not the drawer
-        if (!app.current.matches(IndexPage)) {
+        if (!app.current.matches(IndexPage) || !app.forum.attribute('massControls')) {
             return;
         }
 

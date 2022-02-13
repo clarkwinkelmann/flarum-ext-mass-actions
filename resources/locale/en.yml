@@ -4,14 +4,15 @@ clarkwinkelmann-mass-actions:
             all: Select all
             none: Unselect all
         actions:
-            markAsRead: Mark as read
-            hide: Delete
-            restore: Restore
-            lock: Lock
-            unlock: Unlock
+            markAsRead: Mark selected as read
+            hide: Delete selected
+            restore: Restore selected
+            lock: Lock selected
+            unlock: Unlock selected
             tags: Tags
             tags-edit: Edit tags
             tags-add: Add <em>{tag}</em>
 
     admin:
         permissions:
+            controls: View mass selection controls

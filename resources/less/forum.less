@@ -30,6 +30,7 @@
 .DiscussionListItem--selected,
 .DiscussionListItem--selected:hover {
     background: @primary-color;
+    --discussion-title-color: #eee;
 
     .DiscussionListItem-select {
         display: flex;
@@ -37,6 +38,11 @@
 
     .DiscussionListItem-content {
         opacity: 1; // Cancel deleted effect because it shifts our checkbox colors
+    }
+
+    .DiscussionListItem-info,
+    .DiscussionListItem-count {
+        color: #eee;
     }
 }
 
