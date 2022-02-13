@@ -19,7 +19,7 @@
     ],
     "support": {
         "source": "https://github.com/clarkwinkelmann/flarum-ext-mass-actions",
-        "forum": ""
+        "forum": "https://discuss.flarum.org/d/30122"
     },
     "autoload": {
         "psr-4": {
@@ -37,7 +37,7 @@
             }
         },
         "flagrow": {
-            "discuss": ""
+            "discuss": "https://discuss.flarum.org/d/30122"
         }
     }
 }

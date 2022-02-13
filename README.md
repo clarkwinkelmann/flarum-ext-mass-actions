@@ -48,3 +48,4 @@ Support is offered on a "best effort" basis through the Flarum community thread.
 
 - [GitHub](https://github.com/clarkwinkelmann/flarum-ext-mass-actions)
 - [Packagist](https://packagist.org/packages/clarkwinkelmann/flarum-ext-mass-actions)
+- [Discuss](https://discuss.flarum.org/d/30122)
