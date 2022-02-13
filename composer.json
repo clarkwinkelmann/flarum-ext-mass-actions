@@ -1,0 +1,43 @@
+{
+    "name": "clarkwinkelmann/flarum-ext-mass-actions",
+    "description": "Mass actions for discussions",
+    "keywords": [
+        "flarum"
+    ],
+    "type": "flarum-extension",
+    "license": "MIT",
+    "require": {
+        "flarum/core": "^1.2"
+    },
+    "authors": [
+        {
+            "name": "Clark Winkelmann",
+            "homepage": "https://clarkwinkelmann.com/",
+            "email": "clark.winkelmann@gmail.com",
+            "role": "Developer"
+        }
+    ],
+    "support": {
+        "source": "https://github.com/clarkwinkelmann/flarum-ext-mass-actions",
+        "forum": ""
+    },
+    "autoload": {
+        "psr-4": {
+            "ClarkWinkelmann\\MassActions\\": "src/"
+        }
+    },
+    "extra": {
+        "flarum-extension": {
+            "title": "Mass Actions",
+            "category": "discussion",
+            "icon": {
+                "name": "fas fa-tasks",
+                "backgroundColor": "#684ba6",
+                "color": "#fff"
+            }
+        },
+        "flagrow": {
+            "discuss": ""
+        }
+    }
+}

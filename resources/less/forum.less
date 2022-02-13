@@ -1,0 +1,46 @@
+.MassSelectControl {
+    font-size: 20px;
+    color: #aaa;
+    line-height: 1;
+
+    &:hover,
+    &.checked {
+        color: #333;
+    }
+}
+
+.DiscussionListItem-select {
+    position: absolute;
+    top: 13px; // Exactly above avatar
+    left: 0;
+    width: 36px; // Same as .Avatar
+    height: 36px;
+    border-radius: 100%;
+    background: white;
+    display: none;
+    align-items: center;
+    justify-content: center;
+}
+
+.DiscussionListItem:hover .DiscussionListItem-select {
+    display: flex;
+    z-index: 100; // Above badges
+}
+
+.DiscussionListItem--selected,
+.DiscussionListItem--selected:hover {
+    background: @primary-color;
+
+    .DiscussionListItem-select {
+        display: flex;
+    }
+
+    .DiscussionListItem-content {
+        opacity: 1; // Cancel deleted effect because it shifts our checkbox colors
+    }
+}
+
+// Because we don't use the SplitDropdown component but only its styles, we don't want to hide the first child
+.item-mass-select .Dropdown--split .Dropdown-menu li:first-child {
+    display: block;
+}
