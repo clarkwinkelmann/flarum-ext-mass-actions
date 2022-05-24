@@ -6,6 +6,7 @@ import Button from 'flarum/common/components/Button';
 import ItemList from 'flarum/common/utils/ItemList';
 import icon from 'flarum/common/helpers/icon';
 import listItems from 'flarum/common/helpers/listItems';
+import Discussion from 'flarum/common/models/Discussion';
 import Checkbox, {CheckboxAttrs} from './components/Checkbox';
 import SelectState from './utils/SelectState';
 
@@ -39,6 +40,62 @@ export default function () {
                 app.current.get('mass-select')!.clear();
             },
         }, app.translator.trans('clarkwinkelmann-mass-actions.forum.select.none')));
+
+        controls.add('read', Button.component({
+            onclick() {
+                app.current.get('mass-select')!.clear();
+                app.current.get('mass-select')!.addAll(model => {
+                    return (model as Discussion).isRead();
+                });
+            },
+        }, app.translator.trans('clarkwinkelmann-mass-actions.forum.select.read')));
+
+        controls.add('unread', Button.component({
+            onclick() {
+                app.current.get('mass-select')!.clear();
+                app.current.get('mass-select')!.addAll(model => {
+                    return (model as Discussion).isUnread();
+                });
+            },
+        }, app.translator.trans('clarkwinkelmann-mass-actions.forum.select.unread')));
+
+        controls.add('visible', Button.component({
+            onclick() {
+                app.current.get('mass-select')!.clear();
+                app.current.get('mass-select')!.addAll(model => {
+                    return !(model as Discussion).isHidden();
+                });
+            },
+        }, app.translator.trans('clarkwinkelmann-mass-actions.forum.select.visible')));
+
+        controls.add('hidden', Button.component({
+            onclick() {
+                app.current.get('mass-select')!.clear();
+                app.current.get('mass-select')!.addAll(model => {
+                    return (model as Discussion).isHidden();
+                });
+            },
+        }, app.translator.trans('clarkwinkelmann-mass-actions.forum.select.hidden')));
+
+        if ('flarum-lock' in flarum.extensions) {
+            controls.add('locked', Button.component({
+                onclick() {
+                    app.current.get('mass-select')!.clear();
+                    app.current.get('mass-select')!.addAll(model => {
+                        return model.attribute('isLocked');
+                    });
+                },
+            }, app.translator.trans('clarkwinkelmann-mass-actions.forum.select.locked')));
+
+            controls.add('unlocked', Button.component({
+                onclick() {
+                    app.current.get('mass-select')!.clear();
+                    app.current.get('mass-select')!.addAll(model => {
+                        return !model.attribute('isLocked');
+                    });
+                },
+            }, app.translator.trans('clarkwinkelmann-mass-actions.forum.select.unlocked')));
+        }
 
         // We don't use Flarum's SplitDropdown because the children of the first button aren't redrawing properly
         items.add('mass-select', m('.ButtonGroup.Dropdown.Dropdown--split.dropdown', {}, [

@@ -85,8 +85,12 @@ export default class SelectState {
         return items;
     }
 
-    addAll(): void {
-        this.allCandidates().forEach(this.add.bind(this));
+    addAll(filter: (model: Model) => boolean = () => true): void {
+        this.allCandidates().forEach(model => {
+            if (filter(model)) {
+                this.add(model);
+            }
+        });
         this.rangeStartId = null;
     }
 
@@ -99,7 +103,7 @@ export default class SelectState {
         return this.ids.length;
     }
 
-    private callbackWithModel<T = void>(callback: (model: Model) => T): (id: string) => T {
+    private callbackWithModel<M extends Model = Model, T = void>(callback: (model: M) => T): (id: string) => T {
         return (id: string) => {
             return callback(app.store.getById(this.type, id)!);
         }
@@ -109,12 +113,12 @@ export default class SelectState {
         this.ids.forEach(this.callbackWithModel(callback));
     }
 
-    forEachPromise(callback: (model: Model) => Promise<any>): Promise<any> {
-        return Promise.all(this.ids.map(this.callbackWithModel(callback)));
+    forEachPromise<M extends Model = Model>(callback: (model: M) => Promise<any>): Promise<any> {
+        return Promise.all(this.ids.map(this.callbackWithModel<M>(callback)));
     }
 
-    some(callback: (model: Model) => boolean): boolean {
-        return this.ids.some(this.callbackWithModel<boolean>(callback));
+    some<M extends Model = Model>(callback: (model: M) => boolean): boolean {
+        return this.ids.some(this.callbackWithModel<M, boolean>(callback));
     }
 
     all(): Model[] {

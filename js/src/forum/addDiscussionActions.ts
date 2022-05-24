@@ -4,6 +4,7 @@ import IndexPage from 'flarum/forum/components/IndexPage';
 import Button from 'flarum/common/components/Button';
 import Dropdown from 'flarum/common/components/Dropdown';
 import DiscussionControls from 'flarum/forum/utils/DiscussionControls';
+import Discussion from 'flarum/common/models/Discussion';
 import proxyModels from './utils/proxyModels';
 import IconButton from './components/IconButton';
 
@@ -22,7 +23,7 @@ export default function () {
             title: app.translator.trans('clarkwinkelmann-mass-actions.forum.actions.markAsRead'),
             icon: 'fas fa-check',
             onclick() {
-                select.forEachPromise(discussion => {
+                select.forEachPromise<Discussion>(discussion => {
                     // Same code as in DiscussionListItem
                     if (discussion.isUnread()) {
                         return discussion.save({lastReadPostNumber: discussion.lastPostNumber()});
@@ -36,7 +37,7 @@ export default function () {
         }));
 
         if (app.forum.attribute('canHideDiscussionsSometime')) {
-            const anyHidden = select.some(discussion => {
+            const anyHidden = select.some<Discussion>(discussion => {
                 return discussion.isHidden();
             });
 
@@ -44,7 +45,7 @@ export default function () {
                 title: anyHidden ? app.translator.trans('clarkwinkelmann-mass-actions.forum.actions.restore') : app.translator.trans('clarkwinkelmann-mass-actions.forum.actions.hide'),
                 icon: anyHidden ? 'fas fa-reply' : 'fas fa-trash-alt',
                 onclick() {
-                    select.forEachPromise(discussion => {
+                    select.forEachPromise<Discussion>(discussion => {
                         if (!discussion.canHide()) {
                             return Promise.resolve();
                         }
@@ -58,7 +59,7 @@ export default function () {
                         m.redraw();
                     });
                 },
-                disabled: !select.some(discussion => {
+                disabled: !select.some<Discussion>(discussion => {
                     return discussion.canHide();
                 }),
             }));

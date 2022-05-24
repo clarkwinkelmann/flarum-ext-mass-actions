@@ -1,8 +1,14 @@
 clarkwinkelmann-mass-actions:
     forum:
         select:
-            all: Select all
-            none: Unselect all
+            all: All
+            none: None
+            read: Read
+            unread: Not read
+            visible: Not deleted
+            hidden: Soft deleted
+            locked: Locked
+            unlocked: Unlocked
         actions:
             markAsRead: Mark selected as read
             hide: Delete selected

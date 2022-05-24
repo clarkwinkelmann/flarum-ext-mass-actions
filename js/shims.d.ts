@@ -1,9 +1,3 @@
-import Mithril from 'mithril';
-
-declare global {
-    const m: Mithril.Static;
-}
-
 import PageState from 'flarum/common/states/PageState';
 import SelectState from './src/forum/utils/SelectState';
 
