@@ -6,16 +6,8 @@ import Button from 'flarum/common/components/Button';
 import ItemList from 'flarum/common/utils/ItemList';
 import icon from 'flarum/common/helpers/icon';
 import listItems from 'flarum/common/helpers/listItems';
-import Checkbox from './components/Checkbox';
+import Checkbox, {CheckboxAttrs} from './components/Checkbox';
 import SelectState from './utils/SelectState';
-
-function selectAllDiscussions() {
-    app.discussions.getPages().forEach(page => {
-        page.items.forEach(discussion => {
-            app.current.get('mass-select')!.add(discussion);
-        });
-    });
-}
 
 export default function () {
     extend(IndexPage.prototype, 'viewItems', function (items) {
@@ -38,7 +30,7 @@ export default function () {
 
         controls.add('all', Button.component({
             onclick() {
-                selectAllDiscussions();
+                app.current.get('mass-select')!.addAll();
             },
         }, app.translator.trans('clarkwinkelmann-mass-actions.forum.select.all')));
 
@@ -54,7 +46,7 @@ export default function () {
                 className: 'Button SplitDropdown-button MassSelectControl' + (count > 0 ? ' checked' : ''),
                 onclick() {
                     if (app.current.get('mass-select')!.count() === 0) {
-                        selectAllDiscussions();
+                        app.current.get('mass-select')!.addAll();
                     } else {
                         app.current.get('mass-select')!.clear();
                     }
@@ -77,10 +69,10 @@ export default function () {
             if (vdom && vdom.attrs && vdom.attrs.className && vdom.attrs.className.indexOf('DiscussionListItem-content') !== -1) {
                 const state = app.current.get('mass-select')!;
 
-                vdom.children.unshift(m('.DiscussionListItem-select', Checkbox.component({
+                vdom.children.unshift(m('.DiscussionListItem-select', Checkbox.component<CheckboxAttrs>({
                     state: state.contains(this.attrs.discussion),
-                    onchange: () => {
-                        state.toggle(this.attrs.discussion);
+                    onchange: event => {
+                        state.toggle(this.attrs.discussion, event.shiftKey);
                     },
                 })));
             }

@@ -1,9 +1,9 @@
 import Component, {ComponentAttrs} from 'flarum/common/Component';
 import icon from 'flarum/common/helpers/icon';
 
-interface CheckboxAttrs extends ComponentAttrs {
+export interface CheckboxAttrs extends ComponentAttrs {
     state: boolean
-    onchange: () => void,
+    onchange: (event: MouseEvent) => void
 }
 
 export default class Checkbox extends Component<CheckboxAttrs> {

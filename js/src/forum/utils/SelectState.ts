@@ -4,6 +4,7 @@ import app from 'flarum/forum/app';
 export default class SelectState {
     type: string
     ids: string[] = []
+    rangeStartId: string | null = null
 
     constructor(type: string) {
         this.type = type;
@@ -17,9 +18,28 @@ export default class SelectState {
         return this.indexOf(model) !== -1;
     }
 
-    toggle(model: Model): void {
+    toggle(model: Model, shift: boolean = false): void {
         if (!model.id()) {
             throw 'Missing ID in model';
+        }
+
+        if (shift && this.rangeStartId) {
+            const candidates = this.allCandidates();
+            const startModel = app.store.getById(this.type, this.rangeStartId)!;
+
+            let startIndex = candidates.indexOf(startModel);
+            let endIndex = candidates.indexOf(model);
+
+            if (startIndex >= 0 && endIndex >= 0 && this.contains(startModel) !== this.contains(model)) {
+                // Allow selection in both directions, switch indexes for use in slice() below
+                if (startIndex > endIndex) {
+                    [startIndex, endIndex] = [endIndex, startIndex];
+                }
+
+                candidates.slice(startIndex, endIndex + 1).forEach((this.contains(model) ? this.remove : this.add).bind(this));
+
+                return;
+            }
         }
 
         const index = this.indexOf(model);
@@ -29,6 +49,8 @@ export default class SelectState {
         } else {
             this.ids.splice(index, 1);
         }
+
+        this.rangeStartId = model.id()!;
     }
 
     add(model: Model): void {
@@ -41,8 +63,36 @@ export default class SelectState {
         }
     }
 
+    remove(model: Model): void {
+        if (!model.id()) {
+            throw 'Missing ID in model';
+        }
+
+        const index = this.indexOf(model);
+
+        if (index !== -1) {
+            this.ids.splice(index, 1);
+        }
+    }
+
+    private allCandidates(): Model[] {
+        const items: Model[] = [];
+
+        app.discussions.getPages().forEach(page => {
+            items.push(...page.items);
+        });
+
+        return items;
+    }
+
+    addAll(): void {
+        this.allCandidates().forEach(this.add.bind(this));
+        this.rangeStartId = null;
+    }
+
     clear(): void {
         this.ids = [];
+        this.rangeStartId = null;
     }
 
     count(): number {
