@@ -1,10 +1,12 @@
 import Model from 'flarum/common/Model';
 import app from 'flarum/forum/app';
+import PaginatedListState from 'flarum/common/states/PaginatedListState';
 
 export default class SelectState {
     type: string
     ids: string[] = []
     rangeStartId: string | null = null
+    listState: PaginatedListState<Model> | null = null
 
     constructor(type: string) {
         this.type = type;
@@ -78,11 +80,17 @@ export default class SelectState {
     private allCandidates(): Model[] {
         const items: Model[] = [];
 
-        app.discussions.getPages().forEach(page => {
+        const state = this.listState || app.discussions;
+
+        state.getPages().forEach(page => {
             items.push(...page.items);
         });
 
         return items;
+    }
+
+    setListState(state: PaginatedListState<Model>) {
+        this.listState = state;
     }
 
     addAll(filter: (model: Model) => boolean = () => true): void {

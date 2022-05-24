@@ -1,124 +1,55 @@
 import {extend} from 'flarum/common/extend';
 import app from 'flarum/forum/app';
+import listItems from 'flarum/common/helpers/listItems';
+import ItemList from 'flarum/common/utils/ItemList';
 import IndexPage from 'flarum/forum/components/IndexPage';
 import DiscussionListItem from 'flarum/forum/components/DiscussionListItem';
-import Button from 'flarum/common/components/Button';
-import ItemList from 'flarum/common/utils/ItemList';
-import icon from 'flarum/common/helpers/icon';
-import listItems from 'flarum/common/helpers/listItems';
-import Discussion from 'flarum/common/models/Discussion';
+import DiscussionsUserPage from 'flarum/forum/components/DiscussionsUserPage';
 import Checkbox, {CheckboxAttrs} from './components/Checkbox';
 import SelectState from './utils/SelectState';
+import discussionActionControls from './utils/discussionActionControls';
+import discussionViewControls from './utils/discussionViewControls';
 
 export default function () {
+    extend(IndexPage.prototype, 'oninit', function () {
+        app.current.set('mass-select', new SelectState('discussions'));
+    });
+
     extend(IndexPage.prototype, 'viewItems', function (items) {
         if (!app.forum.attribute('massControls')) {
             return;
         }
 
-        const controls = new ItemList();
+        discussionViewControls(items);
+    });
 
-        let iconName = 'far fa-square';
-        const count = app.current.get('mass-select')!.count();
-
-        if (count > 0) {
-            if (count === app.discussions.getPages().reduce((total, page) => total + page.items.length, 0)) {
-                iconName = 'fas fa-check-square';
-            } else {
-                iconName = 'fas fa-minus-square';
-            }
+    extend(IndexPage.prototype, 'actionItems', function (items) {
+        if (!app.forum.attribute('massControls')) {
+            return;
         }
 
-        controls.add('all', Button.component({
-            onclick() {
-                app.current.get('mass-select')!.addAll();
-            },
-        }, app.translator.trans('clarkwinkelmann-mass-actions.forum.select.all')));
+        discussionActionControls(items);
+    });
 
-        controls.add('clear', Button.component({
-            onclick() {
-                app.current.get('mass-select')!.clear();
-            },
-        }, app.translator.trans('clarkwinkelmann-mass-actions.forum.select.none')));
+    extend(DiscussionsUserPage.prototype, 'show', function () {
+        app.current.set('mass-select', new SelectState('discussions'));
+        app.current.get('mass-select')!.setListState(this.state!);
+    });
 
-        controls.add('read', Button.component({
-            onclick() {
-                app.current.get('mass-select')!.clear();
-                app.current.get('mass-select')!.addAll(model => {
-                    return (model as Discussion).isRead();
-                });
-            },
-        }, app.translator.trans('clarkwinkelmann-mass-actions.forum.select.read')));
-
-        controls.add('unread', Button.component({
-            onclick() {
-                app.current.get('mass-select')!.clear();
-                app.current.get('mass-select')!.addAll(model => {
-                    return (model as Discussion).isUnread();
-                });
-            },
-        }, app.translator.trans('clarkwinkelmann-mass-actions.forum.select.unread')));
-
-        controls.add('visible', Button.component({
-            onclick() {
-                app.current.get('mass-select')!.clear();
-                app.current.get('mass-select')!.addAll(model => {
-                    return !(model as Discussion).isHidden();
-                });
-            },
-        }, app.translator.trans('clarkwinkelmann-mass-actions.forum.select.visible')));
-
-        controls.add('hidden', Button.component({
-            onclick() {
-                app.current.get('mass-select')!.clear();
-                app.current.get('mass-select')!.addAll(model => {
-                    return (model as Discussion).isHidden();
-                });
-            },
-        }, app.translator.trans('clarkwinkelmann-mass-actions.forum.select.hidden')));
-
-        if ('flarum-lock' in flarum.extensions) {
-            controls.add('locked', Button.component({
-                onclick() {
-                    app.current.get('mass-select')!.clear();
-                    app.current.get('mass-select')!.addAll(model => {
-                        return model.attribute('isLocked');
-                    });
-                },
-            }, app.translator.trans('clarkwinkelmann-mass-actions.forum.select.locked')));
-
-            controls.add('unlocked', Button.component({
-                onclick() {
-                    app.current.get('mass-select')!.clear();
-                    app.current.get('mass-select')!.addAll(model => {
-                        return !model.attribute('isLocked');
-                    });
-                },
-            }, app.translator.trans('clarkwinkelmann-mass-actions.forum.select.unlocked')));
+    extend(DiscussionsUserPage.prototype, 'content', function (vdom) {
+        if (!app.forum.attribute('massControls')) {
+            return;
         }
 
-        // We don't use Flarum's SplitDropdown because the children of the first button aren't redrawing properly
-        items.add('mass-select', m('.ButtonGroup.Dropdown.Dropdown--split.dropdown', {}, [
-            Button.component({
-                className: 'Button SplitDropdown-button MassSelectControl' + (count > 0 ? ' checked' : ''),
-                onclick() {
-                    if (app.current.get('mass-select')!.count() === 0) {
-                        app.current.get('mass-select')!.addAll();
-                    } else {
-                        app.current.get('mass-select')!.clear();
-                    }
-                },
-            }, icon(iconName)),
-            m('button.Dropdown-toggle.Button.Button--icon', {
-                'data-toggle': 'dropdown',
-            }, icon('fas fa-caret-down', {className: 'Button-caret'})),
-            m('ul.Dropdown-menu.dropdown-menu', listItems(controls.toArray())),
-        ]), 100);
+        vdom.children.unshift(m('.IndexPage-toolbar', [
+            m('.IndexPage-toolbar-view', listItems(discussionViewControls(new ItemList()).toArray())),
+            m('.IndexPage-toolbar-action', listItems(discussionActionControls(new ItemList()).toArray())),
+        ]));
     });
 
     extend(DiscussionListItem.prototype, 'view', function (vdom) {
-        // Only add the checkboxes on the index page, not the drawer
-        if (!app.current.matches(IndexPage) || !app.forum.attribute('massControls')) {
+        // Only add the checkboxes on the index+user pages, not the drawer
+        if (!(app.current.matches(IndexPage) || app.current.matches(DiscussionsUserPage)) || !app.forum.attribute('massControls')) {
             return;
         }
 
@@ -144,9 +75,5 @@ export default function () {
         if (app.current.get('mass-select')?.contains(this.attrs.discussion)) {
             attrs.className += ' DiscussionListItem--selected';
         }
-    });
-
-    extend(IndexPage.prototype, 'oninit', function () {
-        app.current.set('mass-select', new SelectState('discussions'));
     });
 }
