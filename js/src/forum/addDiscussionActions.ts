@@ -5,6 +5,7 @@ import Button from 'flarum/common/components/Button';
 import Dropdown from 'flarum/common/components/Dropdown';
 import DiscussionControls from 'flarum/forum/utils/DiscussionControls';
 import Discussion from 'flarum/common/models/Discussion';
+import extractText from 'flarum/common/utils/extractText';
 import proxyModels from './utils/proxyModels';
 import IconButton from './components/IconButton';
 
@@ -36,11 +37,11 @@ export default function () {
             },
         }));
 
-        if (app.forum.attribute('canHideDiscussionsSometime')) {
-            const anyHidden = select.some<Discussion>(discussion => {
-                return discussion.isHidden();
-            });
+        const anyHidden = select.some<Discussion>(discussion => {
+            return discussion.isHidden();
+        });
 
+        if (app.forum.attribute('canHideDiscussionsSometime')) {
             items.add('mass-hide', m(IconButton, {
                 title: anyHidden ? app.translator.trans('clarkwinkelmann-mass-actions.forum.actions.restore') : app.translator.trans('clarkwinkelmann-mass-actions.forum.actions.hide'),
                 icon: anyHidden ? 'fas fa-reply' : 'fas fa-trash-alt',
@@ -60,8 +61,39 @@ export default function () {
                     });
                 },
                 disabled: !select.some<Discussion>(discussion => {
-                    return discussion.canHide();
+                    return !!discussion.canHide();
                 }),
+            }));
+        }
+
+        if (app.forum.attribute('canDeleteDiscussionsSometime') && anyHidden) {
+            // Make a more accurate count of what exactly we will attempt to delete
+            // so the confirmation message is not misleading
+            const count = select.all<Discussion>().filter(discussion => discussion.canDelete() && discussion.isHidden()).length;
+
+            items.add('mass-delete', m(IconButton, {
+                title: app.translator.trans('clarkwinkelmann-mass-actions.forum.actions.delete'),
+                icon: 'fas fa-times',
+                onclick() {
+                    // We can't call DiscussionControls.deleteAction as it would show a confirmation message for every selected discussion
+                    // Instead we manually do the same thing with a single confirmation
+                    if (!confirm(extractText(app.translator.trans('clarkwinkelmann-mass-actions.forum.actions.deleteConfirmation', {
+                        count,
+                    })))) {
+                        return;
+                    }
+
+                    select.forEachPromise<Discussion>(discussion => {
+                        if (!discussion.canDelete() || !discussion.isHidden()) {
+                            return Promise.resolve();
+                        }
+
+                        return discussion.delete().then(() => app.discussions.removeDiscussion(discussion));
+                    }).then(() => {
+                        m.redraw();
+                    });
+                },
+                disabled: count === 0,
             }));
         }
 
@@ -87,6 +119,31 @@ export default function () {
                 },
                 disabled: !select.some(discussion => {
                     return discussion.attribute('canLock');
+                }),
+            }));
+        }
+
+        if (app.forum.attribute('canStickyDiscussionsSometime')) {
+            const anySticky = select.some(discussion => {
+                return discussion.attribute('isSticky');
+            });
+
+            items.add('mass-lock', m(IconButton, {
+                title: anySticky ? app.translator.trans('clarkwinkelmann-mass-actions.forum.actions.unsticky') : app.translator.trans('clarkwinkelmann-mass-actions.forum.actions.sticky'),
+                icon: 'fas fa-thumbtack', // Unfortunately, there is no good alternate icon for on/off
+                onclick() {
+                    select.forEachPromise(discussion => {
+                        if (!discussion.attribute('canSticky')) {
+                            return Promise.resolve();
+                        }
+
+                        return discussion.save({isSticky: !anySticky});
+                    }).then(() => {
+                        m.redraw();
+                    });
+                },
+                disabled: !select.some(discussion => {
+                    return discussion.attribute('canSticky');
                 }),
             }));
         }

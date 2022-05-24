@@ -121,7 +121,7 @@ export default class SelectState {
         return this.ids.some(this.callbackWithModel<M, boolean>(callback));
     }
 
-    all(): Model[] {
+    all<M extends Model = Model>(): M[] {
         return this.ids.map(id => app.store.getById(this.type, id)!);
     }
 }
