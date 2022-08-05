@@ -1,6 +1,6 @@
 # Mass Actions
 
-[![MIT license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/clarkwinkelmann/flarum-ext-mass-actions/blob/master/LICENSE.md) [![Latest Stable Version](https://img.shields.io/packagist/v/clarkwinkelmann/flarum-ext-mass-actions.svg)](https://packagist.org/packages/clarkwinkelmann/flarum-ext-mass-actions) [![Total Downloads](https://img.shields.io/packagist/dt/clarkwinkelmann/flarum-ext-mass-actions.svg)](https://packagist.org/packages/clarkwinkelmann/flarum-ext-mass-actions) [![Donate](https://img.shields.io/badge/paypal-donate-yellow.svg)](https://www.paypal.me/clarkwinkelmann)
+[![MIT license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/clarkwinkelmann/flarum-ext-mass-actions/blob/master/LICENSE.txt) [![Latest Stable Version](https://img.shields.io/packagist/v/clarkwinkelmann/flarum-ext-mass-actions.svg)](https://packagist.org/packages/clarkwinkelmann/flarum-ext-mass-actions) [![Total Downloads](https://img.shields.io/packagist/dt/clarkwinkelmann/flarum-ext-mass-actions.svg)](https://packagist.org/packages/clarkwinkelmann/flarum-ext-mass-actions) [![Donate](https://img.shields.io/badge/paypal-donate-yellow.svg)](https://www.paypal.me/clarkwinkelmann)
 
 This extension adds the ability to perform grouped actions on discussions through checkboxes.
 A future version might re-use the logic for users.
