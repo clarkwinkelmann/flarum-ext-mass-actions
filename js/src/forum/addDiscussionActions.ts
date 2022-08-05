@@ -128,7 +128,7 @@ export default function () {
                 return discussion.attribute('isSticky');
             });
 
-            items.add('mass-lock', m(IconButton, {
+            items.add('mass-sticky', m(IconButton, {
                 title: anySticky ? app.translator.trans('clarkwinkelmann-mass-actions.forum.actions.unsticky') : app.translator.trans('clarkwinkelmann-mass-actions.forum.actions.sticky'),
                 icon: 'fas fa-thumbtack', // Unfortunately, there is no good alternate icon for on/off
                 onclick() {
